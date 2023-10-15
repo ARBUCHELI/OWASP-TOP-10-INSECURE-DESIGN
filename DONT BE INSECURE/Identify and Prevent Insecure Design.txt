@@ -1,0 +1,71 @@
+# IDENTIFY AND PREVENT INSECURE DESIGN
+--------------------------------------
+
+* Introduction
+--------------
+A more recent entry within OWASP, Insecure Design, covers issues due to missing or ineffective controls. While issues of this type can sometimes result from poor coding practices, it’s 
+generally the result of poor planning.
+
+A great example of Insecure Design is using “Security Questions” in applications. While many of us may be familiar with the common “Choose a question about yourself that only you can 
+answer” option for password recovery, this is generally considered an insecure practice.
+
+While we may like to think an attacker won’t be able to guess our maiden name or the name of our first crush, this design exposes users to a potential risk that, without other controls, 
+can be easily exploited.
+
+In this lesson, we’ll look at a system that fails to implement proper controls.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+* Poor Anti-Bot Design
+----------------------
+You’re shopping online, ready to place an order, and you receive a CAPTCHA before the order is placed. The surprise CAPTCHA is common among many sites and is used as an anti-bot measure. 
+It is designed to ensure that legitimate users can buy products and services while reducing the number of products and services that an automated script can buy.
+
+CAPTCHA is a good solution for anti-bot mechanisms. However, before CAPTCHA, there was a solution that was commonly used yet a highly ineffective mechanism, an IP-based blocker. Depending 
+on the system, there are countless ways to bypass these controls.
+
+Let’s look at the following example.
+
+* Instructions
+--------------
+In this example, we’re working for a retail organization interested in testing their “new” anti-bot solution. To ensure that legitimate users aren’t affected, the retail organization has 
+compiled a list of “problem” IPs it plans to block. If a request comes from one of these “problem” IPs, the organization assumes it is a bot and blocks the connection.
+
+To validate this, they’ve added our IP to the list.
+
+Let’s check how well it works using CURL. Run the following command.
+
+	curl --verbose http://dev-staging.internal-commerce.com/
+
+As we can see, the server returns a “403 Forbidden” error message. Seems like our connection was blocked.
+
+Let’s take a look at a potential workaround now. Many servers and applications support the X-Forwarded-For header. If we look at this official Mozilla’s documentation we can see that this header is used to identify the “originating” IP. Let’s see what happens if we set this header with an IP that is likely not on the “problem” list.
+
+	curl --verbose http://dev-staging.internal-commerce.com/ --header "X-Forwarded-For: 8.8.8.8"
+
+Sure enough, using this header, we can bypass the anti-bot solution. However, even if support for this header was dropped, we could still bypass the controls by using a proxy server and rerouting our connection from a non-problematic IP.
+
+Even though the activity would be the same, a proxy would allow us to mask our actual IP, bypassing this list.
+
+Due to the poor design decision to block purely on IPs, the system is insecure, and their protections are easy to bypass.
+
+In the final exercise, we will discuss potential remediations for this issue.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+* Remediation and Conclusion
+----------------------------
+In the last exercise, we saw how poor design choices, such as blocking bots based on IPs, can be abused by threat actors to negatively impact a system’s operations and the expected 
+system’s output.
+
+In the example of the failed anti-bot protections, there are several different solutions that could be used. The most commonly accepted solution is to leverage multiple approaches to 
+prevent bots from engaging with the site. While IP block may help reduce some risks, we know that proxies can help attackers bypass these controls. In these cases, CAPTCHA systems are an 
+effective solution to mitigate the risk of automated bots looking to attack our sites.
+
+When building a securely designed system, it’s important that an organization properly reviews the threat landscape. By doing so, developers, and their support teams, can better implement 
+design choices to ensure the underlying foundational choices are effective and well-conceived.
+
+Threat modeling and tabletop exercises can help identify risks before a system is even proactively completed.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
